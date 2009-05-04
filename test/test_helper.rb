@@ -18,7 +18,7 @@ ActiveRecord::Base.establish_connection(config['test'])
 def rebuild_models
   ActiveRecord::Base.connection.create_table :keywords, :force => true do |t|
     t.column :name, :string
-
+    t.column :se, :string
   end
   ActiveRecord::Base.connection.create_table :http_referrers, :force => true do |t|
     t.column :url, :string
@@ -30,7 +30,8 @@ def rebuild_models
   
   ActiveRecord::Base.connection.create_table :referrals, :force => true do |t|
     t.column :referrer_id, :integer
-    t.column :referrer_type, :string    
+    t.column :referrer_type, :string
+    t.column :user_id, :integer
     t.column :posts_counter, :integer, :default => 0
   end
   
@@ -50,6 +51,10 @@ def rebuild_models
     t.column :url, :string
     t.column :name, :string
   end
+  ActiveRecord::Base.connection.create_table :users, :force => true do |t|
+    t.column :name, :string
+    t.column :login, :string
+  end
   rebuild_classes
 end
 
@@ -67,11 +72,12 @@ def rebuild_classes
   end
 
   rebuild_class("Redirect") do
-    include MarketingFu::Refirect
+    include MarketingFu::Redirect
   end
   
   rebuild_class("User") do
-    include MarketingFu::Refirect
+    include MarketingFu::User
+    include MarketingFu::Referrers::User
   end
   
   rebuild_class("Referral") do
@@ -83,7 +89,7 @@ def rebuild_classes
   end
   
   rebuild_class("GoalReferral") do
-    include MarketingFu::Referral
+    include MarketingFu::GoalReferral
   end
 
 end
@@ -91,26 +97,7 @@ end
 def rebuild_class(name, &block)
   Object.send(:remove_const, name) rescue nil
   Object.const_set(name, Class.new(ActiveRecord::Base))
-  name.constantize.class_eval(block)
+  name.constantize.class_eval(&block)
 end
 
-class Anonym
-  include YAACL::Anonym
-end
-
-# class Post
-#   include YAACL::Model
-# end
-# 
-# class Blog
-#   include YAACL::Model
-# end
-# 
-# class User
-#   include YAACL::User
-# end
-# 
-# class Role
-#   include YAACL::Roles
-# end
 
