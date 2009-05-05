@@ -16,8 +16,10 @@ module MarketingFu::Referrers
     end
     
     module InstanceMethods
-      def goal_count(name)
-        if (goal = Goal.find_by_name(name))
+      def goal_count(name = nil)
+        if name.nil?
+          referrals.count(:include => :goal_referrals)
+        elsif (goal = ::Goal.find_by_name(name))
           referrals.count(:include => :goal_referrals, :conditions => {'goal_referrals.goal_id' => goal.id})
         else
           nil
@@ -26,11 +28,25 @@ module MarketingFu::Referrers
 
       def goal_counts
         counts = referrals.count(:include => :goal_referrals, :group => 'goal_referrals.goal_id')
-        goals = Goal.find(counts.keys).index_by {|v| v.id}
+        goals = ::Goal.find(counts.keys).index_by {|v| v.id}
         res = {}
         counts.each {|k, v| res[goals[k.to_i].name] = v}   
         res
       end
+      
+      def referrer_stats(options = {})
+        stats = {}
+        stats[:goals] = goal_counts
+        stats[:referrals_count] = referrals.count
+        stats[:counters] = if options[:counters]
+          options[:counters].map {|v| [v, referrals.sum(v)]}
+        else
+          nil
+        end
+        stats
+      end
+      
+
     end
     
     def self.included(receiver)

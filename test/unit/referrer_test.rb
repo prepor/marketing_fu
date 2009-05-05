@@ -33,5 +33,20 @@ class ReferrerTest < Test::Unit::TestCase
     should "be right" do
       assert @referrer.is_a? User
     end
+    
+    context "by other user" do
+      setup do
+        @user2 = User.create :login => 'zedmor'
+        @user2.create_with_referral(@referral)        
+      end
+
+      should "apply block for referrer" do
+        @user2.for_referrer do |user|
+          user.update_attribute :login, 'zedmor_t'
+        end
+        assert_equal 'zedmor_t', @user.reload.login
+      end
+    end
+    
   end
 end

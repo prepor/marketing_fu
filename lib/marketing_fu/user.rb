@@ -15,6 +15,14 @@ module MarketingFu
           referral.destroy
         end
       end
+      
+      def for_referrer(&block)
+        if self.referral.referrer.is_a? User
+          block.call(self.referral.referrer)
+        else
+          nil
+        end
+      end
     end
     
     def self.included(receiver)
